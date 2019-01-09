@@ -118,7 +118,7 @@
     - name: Unarchive etcd and move to correct dir
       when: inventory_hostname in groups['k8s-node-1']
       unarchive:
-        src: /usr/local/bin/etcd
+        src: /usr/local/bin/etc-d
         dest: ~/etcd
         remote_src: yes
         mode: a+r,u+w,a+x

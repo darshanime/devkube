@@ -118,10 +118,10 @@
     #     - kubelet
     #     - runc
 
-    - name: Unarchive crictl and move to correct dir
+    - name: Unarchive cri-ctl and move to correct dir
       when: "'k8s-node-1' not in group_names"
       unarchive:
-        src: /usr/local/bin/crictl
+        src: /usr/local/bin/cri-ctl
         dest: /usr/local/bin/
         remote_src: yes
 
@@ -224,7 +224,7 @@
       delegate_to: localhost
       template:
         src: "{{ item }}"
-        dest: ./
+        dest: "{{ item.split('.')[:-1] | join('.') }}"
       with_items:
         - kube-flannel.yaml.j2
         - coredns.yaml.j2
