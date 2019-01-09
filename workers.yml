@@ -1,0 +1,251 @@
+- hosts: all
+  vars_files:
+    - "all.yml"
+  tasks:
+    - name: Ping all nodes
+      ping:
+
+    - name: Install required packages
+      when: "'k8s-node-1' not in group_names"
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      with_items:
+          - socat
+          - conntrack
+          - ipset
+
+    - name: Download the k8s worker node binaries
+      when: "'k8s-node-1' not in group_names"
+      get_url:
+        url: "{{ item['value']['link'] }}"
+        dest: "/usr/local/bin/{{ item['key'] }}"
+        mode: a+r,u+w,a+x
+        force: true
+      with_items:
+        - "{{ worker_binaries | dict2items | selectattr('value.download') | list }}"
+
+    - name: Generating the kubeconfig for the workers
+      when: "'k8s-node-1' not in group_names"
+      register: worker_kubeconfig
+      shell: |
+        {
+          kubectl config set-cluster kubernetes-the-hard-way \
+          --certificate-authority=ca.pem \
+          --embed-certs=true \
+          --server="https://{{ groups['k8s-node-1'] | join('') }}:6443" \
+          --kubeconfig=/var/lib/kubelet/kubeconfig
+
+          kubectl config set-credentials "system:node:{{ ansible_nodename }}" \
+          --client-certificate="{{ ansible_nodename }}.pem" \
+          --client-key="{{ ansible_nodename }}-key.pem" \
+          --embed-certs=true \
+          --kubeconfig=/var/lib/kubelet/kubeconfig
+
+          kubectl config set-context default \
+          --cluster=kubernetes-the-hard-way \
+          --user=system:node:"{{ ansible_nodename }}" \
+          --kubeconfig=/var/lib/kubelet/kubeconfig
+
+          kubectl config use-context default --kubeconfig=/var/lib/kubelet/kubeconfig
+        }
+
+    - when: "'k8s-node-1' not in group_names"
+      debug:
+        var: worker_kubeconfig.stdout_lines
+
+    - name: Generating the kubeconfig for the kube-proxy
+      when: "'k8s-node-1' not in group_names"
+      register: kube_proxy
+      shell: |
+        {
+          kubectl config set-cluster kubernetes-the-hard-way \
+            --certificate-authority=ca.pem \
+            --embed-certs=true \
+            --server="https://{{ groups['k8s-node-1'] | join('') }}:6443" \
+            --kubeconfig=/var/lib/kube-proxy/kubeconfig
+
+          kubectl config set-credentials system:kube-proxy \
+            --client-certificate=kube-proxy.pem \
+            --client-key=kube-proxy-key.pem \
+            --embed-certs=true \
+            --kubeconfig=/var/lib/kube-proxy/kubeconfig
+
+          kubectl config set-context default \
+            --cluster=kubernetes-the-hard-way \
+            --user=system:kube-proxy \
+            --kubeconfig=/var/lib/kube-proxy/kubeconfig
+
+          kubectl config use-context default --kubeconfig=/var/lib/kube-proxy/kubeconfig
+        }
+
+    - when: "'k8s-node-1' not in group_names"
+      debug:
+        var: kube_proxy.stdout_lines
+
+    - name: Create the required dirs
+      when: "'k8s-node-1' not in group_names"
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - /etc/cni/net.d
+        - /opt/cni/bin
+        - /var/lib/kubelet
+        - /var/lib/kube-proxy
+        - /var/lib/kubernetes
+        - /var/run/kubernetes
+        - /etc/containerd/
+
+    # - name: Rename runc binary
+    #   when: "'k8s-node-1' not in group_names"
+    #   copy:
+    #     src: /usr/local/bin/runc.amd64
+    #     dest: /usr/local/bin/runc
+    #     remote_src: yes
+
+    # - name: Move binaries to correct dirs
+    #   when: "'k8s-node-1' not in group_names"
+    #   copy:
+    #     src: "/usr/local/bin/{{ item }}"
+    #     dest: /usr/local/bin/
+    #     remote_src: yes
+    #     mode: a+r,u+w,a+x
+    #   with_items:
+    #     - kubectl
+    #     - kube-proxy
+    #     - kubelet
+    #     - runc
+
+    - name: Unarchive crictl and move to correct dir
+      when: "'k8s-node-1' not in group_names"
+      unarchive:
+        src: /usr/local/bin/crictl
+        dest: /usr/local/bin/
+        remote_src: yes
+
+    - name: Unarchive containerd and move to correct dir
+      when: "'k8s-node-1' not in group_names"
+      unarchive:
+        src: /usr/local/bin/containerd
+        dest: /
+        remote_src: yes
+
+    - name: Write config file for containerd
+      when: "'k8s-node-1' not in group_names"
+      template:
+        src: containerd_config.toml
+        dest: /etc/containerd/config.toml
+
+    - name: Write systemd service for containerd
+      when: "'k8s-node-1' not in group_names"
+      template:
+        src: containerd.service
+        dest: /etc/systemd/system/containerd.service
+
+    - name: Copy kubelet certs to correct dirs
+      when: "'k8s-node-1' not in group_names"
+      copy:
+        src: "{{ item }}"
+        dest: /var/lib/kubelet
+        remote_src: yes
+      with_items:
+        - "{{ ansible_nodename }}-key.pem"
+        - "{{ ansible_nodename }}.pem"
+
+    - when: "'k8s-node-1' not in group_names"
+      copy:
+        src: ca.pem
+        dest: /var/lib/kubernetes/
+        remote_src: yes
+
+    - name: Write out kubelet-config.yaml
+      when: "'k8s-node-1' not in group_names"
+      template:
+        src: kubelet_config.yaml.j2
+        dest: /var/lib/kubelet/kubelet-config.yaml
+
+    - name: Write out kubelet.service
+      when: "'k8s-node-1' not in group_names"
+      template:
+        src: kubelet.service
+        dest: /etc/systemd/system/kubelet.service
+
+    - name: Write out kube-proxy-config.yaml
+      when: "'k8s-node-1' not in group_names"
+      template:
+        src: kube-proxy-config.yaml
+        dest: /var/lib/kube-proxy/kube-proxy-config.yaml
+
+    - name: Write out kube-proxy.service
+      when: "'k8s-node-1' not in group_names"
+      template:
+        src: kube-proxy.service
+        dest: /etc/systemd/system/kube-proxy.service
+
+    - name: Reload conf, start worker plane components
+      when: "'k8s-node-1' not in group_names"
+      systemd:
+        daemon_reload: yes
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      with_items:
+        - containerd
+        - kubelet
+        - kube-proxy
+
+    - when: "'k8s-node-1' not in group_names"
+      systemd:
+        daemon_reload: yes
+        name: "{{ item }}"
+        state: restarted
+        enabled: yes
+      with_items:
+        - containerd
+        - kubelet
+        - kube-proxy
+
+    - name: Move cni binaries to correct dir
+      when: "'k8s-node-1' not in group_names"
+      unarchive:
+        src: /usr/local/bin/cni-plugins
+        dest: /opt/cni/bin
+        remote_src: yes
+        mode: a+r,u+w,a+x
+
+    - name: Add iptable config for flannel
+      shell:
+        modprobe br_netfilter && sysctl net.bridge.bridge-nf-call-iptables=1
+
+    - name: Write out CoreDNS, Flannel configs
+      run_once: true
+      delegate_to: localhost
+      template:
+        src: "{{ item }}"
+        dest: ./
+      with_items:
+        - kube-flannel.yaml.j2
+        - coredns.yaml.j2
+
+    - name: Applying CoreDNS, Flannel manifests
+      run_once: true
+      delegate_to: localhost
+      register: apply_dns_flannel
+      shell: |
+        {
+          kubectl apply -f kube-flannel.yaml
+          kubectl apply -f coredns.yaml
+        }
+
+    - run_once: true
+      delegate_to: localhost
+      debug:
+        var: apply_dns_flannel.stdout_lines
+
+    - name: Display some debug msgs
+      run_once: true
+      delegate_to: localhost
+      debug:
+        msg: "{{ hostvars[groups['k8s-node-1'] | join('')]['ip']}}, {{ groups['all'] | map('extract',hostvars,'ansible_nodename') | join(',') }},{{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }},127.0.0.1,kubernetes.default"

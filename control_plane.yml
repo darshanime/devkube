@@ -1,0 +1,296 @@
+- hosts: all
+  vars_files:
+    - "all.yml"
+  tasks:
+    - name: Ping all nodes
+      ping:
+
+    - name: Download the k8s control plane binaries
+      when: inventory_hostname in groups['k8s-node-1']
+      get_url:
+        url: "{{ item['value']['link'] }}"
+        dest: "/usr/local/bin/{{ item['key'] }}"
+        mode: a+r,u+w,a+x
+        force: true
+      with_items:
+        - "{{ control_plane_binaries | dict2items | selectattr('value.download') | list }}"
+
+    - name: Generating the kubeconfig for the kube-controller-manager
+      when: inventory_hostname in groups['k8s-node-1']
+      register: kube_controller_manager
+      shell: |
+        {
+          kubectl config set-cluster kubernetes-the-hard-way \
+            --certificate-authority=ca.pem \
+            --embed-certs=true \
+            --server=https://127.0.0.1:6443 \
+            --kubeconfig=/var/lib/kubernetes/kube-controller-manager.kubeconfig
+
+          kubectl config set-credentials system:kube-controller-manager \
+            --client-certificate=kube-controller-manager.pem \
+            --client-key=kube-controller-manager-key.pem \
+            --embed-certs=true \
+            --kubeconfig=/var/lib/kubernetes/kube-controller-manager.kubeconfig
+
+          kubectl config set-context default \
+            --cluster=kubernetes-the-hard-way \
+            --user=system:kube-controller-manager \
+            --kubeconfig=/var/lib/kubernetes/kube-controller-manager.kubeconfig
+
+          kubectl config use-context default --kubeconfig=/var/lib/kubernetes/kube-controller-manager.kubeconfig
+        }
+
+    - when: inventory_hostname in groups['k8s-node-1']
+      debug:
+        var: kube_controller_manager.stdout_lines
+
+    - name: Generating the kubeconfig for the kube-scheduler
+      when: inventory_hostname in groups['k8s-node-1']
+      register: kube_scheduler
+      shell: |
+        {
+          kubectl config set-cluster kubernetes-the-hard-way \
+            --certificate-authority=ca.pem \
+            --embed-certs=true \
+            --server=https://127.0.0.1:6443 \
+            --kubeconfig=/var/lib/kubernetes/kube-scheduler.kubeconfig
+
+          kubectl config set-credentials system:kube-scheduler \
+            --client-certificate=kube-scheduler.pem \
+            --client-key=kube-scheduler-key.pem \
+            --embed-certs=true \
+            --kubeconfig=/var/lib/kubernetes/kube-scheduler.kubeconfig
+
+          kubectl config set-context default \
+            --cluster=kubernetes-the-hard-way \
+            --user=system:kube-scheduler \
+            --kubeconfig=/var/lib/kubernetes/kube-scheduler.kubeconfig
+
+          kubectl config use-context default --kubeconfig=/var/lib/kubernetes/kube-scheduler.kubeconfig
+        }
+
+    - when: inventory_hostname in groups['k8s-node-1']
+      debug:
+        var: kube_scheduler.stdout_lines
+
+    - name: Generating the kubeconfig for the admin user
+      when: inventory_hostname in groups['k8s-node-1']
+      register: admin_kubeconfig
+      shell: |
+        {
+          kubectl config set-cluster kubernetes-the-hard-way \
+            --certificate-authority=ca.pem \
+            --embed-certs=true \
+            --server=https://127.0.0.1:6443 \
+            --kubeconfig=admin.kubeconfig
+
+          kubectl config set-credentials admin \
+            --client-certificate=admin.pem \
+            --client-key=admin-key.pem \
+            --embed-certs=true \
+            --kubeconfig=admin.kubeconfig
+
+          kubectl config set-context default \
+            --cluster=kubernetes-the-hard-way \
+            --user=admin \
+            --kubeconfig=admin.kubeconfig
+
+          kubectl config use-context default --kubeconfig=admin.kubeconfig
+        }
+
+    - when: inventory_hostname in groups['k8s-node-1']
+      debug:
+        var: admin_kubeconfig.stdout_lines
+
+
+    - name: Create required directory - /etc/etcd/
+      when: inventory_hostname in groups['k8s-node-1']
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - /var/lib/etcd
+        - /etc/etcd
+        - /etc/kubernetes/config
+        - /var/lib/kubernetes/
+        - ~/etcd
+
+    - name: Unarchive etcd and move to correct dir
+      when: inventory_hostname in groups['k8s-node-1']
+      unarchive:
+        src: /usr/local/bin/etcd
+        dest: ~/etcd
+        remote_src: yes
+        mode: a+r,u+w,a+x
+        extra_opts: ['--strip-components=1']
+
+    - when: inventory_hostname in groups['k8s-node-1']
+      shell: mv ~/etcd/etcd* /usr/local/bin/
+
+    - name: Move certs to correct place
+      when: inventory_hostname in groups['k8s-node-1']
+      copy:
+        src: "{{ item }}"
+        dest: /etc/etcd/
+      with_items:
+        - ca.pem
+        - kubernetes-key.pem
+        - kubernetes.pem
+
+    - name: Create the systemd unit file for etcd
+      when: inventory_hostname in groups['k8s-node-1']
+      template:
+        src: etcd.service.j2
+        dest: /etc/systemd/system/etcd.service
+
+    - name: Reload conf, start etcd node
+      when: inventory_hostname in groups['k8s-node-1']
+      systemd:
+        daemon_reload: yes
+        name: etcd
+        state: started
+        enabled: yes
+
+    - when: inventory_hostname in groups['k8s-node-1']
+      systemd:
+        daemon_reload: yes
+        name: etcd
+        state: restarted
+        enabled: yes
+
+    - name: Check if etcd is online
+      when: inventory_hostname in groups['k8s-node-1']
+      register: etcd_output
+      ignore_errors: yes
+      become: true
+      shell: |
+        ETCDCTL_API=3 etcdctl member list \
+        --endpoints=https://127.0.0.1:2379 \
+        --cacert=/etc/etcd/ca.pem \
+        --cert=/etc/etcd/kubernetes.pem \
+        --key=/etc/etcd/kubernetes-key.pem
+
+    - when: inventory_hostname in groups['k8s-node-1']
+      debug:
+        var: etcd_output.stdout_lines
+
+    - name: move the cert files to /var/lib/kubernetes
+      when: inventory_hostname in groups['k8s-node-1']
+      copy:
+        src: "{{ item }}"
+        dest: /var/lib/kubernetes/
+      with_items:
+        - ca.pem
+        - ca-key.pem
+        - kubernetes-key.pem
+        - kubernetes.pem
+        - service-account-key.pem
+        - service-account.pem
+        - encryption-config.yaml
+
+    - name: move the cert files to /etc/kubernetes/config/
+      when: inventory_hostname in groups['k8s-node-1']
+      copy:
+        src: "{{ item }}"
+        dest: /etc/kubernetes/config/
+      with_items:
+        - kube-scheduler.yaml
+
+    - name: Writing the kube-apiserver.serivce systemd file
+      when: inventory_hostname in groups['k8s-node-1']
+      become: true
+      template:
+        src: kube-apiserver.service.j2
+        dest: /etc/systemd/system/kube-apiserver.service
+
+    - name: Writing the kube-controller-manager.serivce systemd file
+      when: inventory_hostname in groups['k8s-node-1']
+      become: true
+      template:
+        src: kube-controller-manager.service.j2
+        dest: /etc/systemd/system/kube-controller-manager.service
+
+    - name: Writing the kube-scheduler.serivce systemd file
+      when: inventory_hostname in groups['k8s-node-1']
+      become: true
+      template:
+        src: kube-scheduler.service.j2
+        dest: /etc/systemd/system/kube-scheduler.service
+
+    - name: Reload conf, start control plane
+      when: inventory_hostname in groups['k8s-node-1']
+      systemd:
+        daemon_reload: yes
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      with_items:
+        - kube-apiserver
+        - kube-controller-manager
+        - kube-scheduler
+
+    - when: inventory_hostname in groups['k8s-node-1']
+      systemd:
+        daemon_reload: yes
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      with_items:
+        - kube-apiserver
+        - kube-controller-manager
+        - kube-scheduler
+
+    - name: Sleeping for 10 seconds for the components to get up
+      pause:
+        seconds: 10
+
+    - name: Check if control plane is up
+      when: inventory_hostname in groups['k8s-node-1']
+      register: k8s_cp_output
+      become: true
+      shell: |
+        kubectl get componentstatuses --kubeconfig admin.kubeconfig
+
+    - when: inventory_hostname in groups['k8s-node-1']
+      debug:
+        var: k8s_cp_output.stdout_lines
+
+    - name: Copy apiserver rbac to master
+      when: inventory_hostname in groups['k8s-node-1']
+      copy:
+        src: kube-rbac-apiserver.yml
+        dest: ~/
+    
+    - name: Apply apiserver rbac
+      when: inventory_hostname in groups['k8s-node-1']
+      shell: |
+        kubectl apply --kubeconfig admin.kubeconfig -f kube-rbac-apiserver.yml
+
+
+    - name: Generating the kubeconfig for remote access
+      run_once: true
+      delegate_to: localhost
+      shell: |
+        {
+          kubectl config set-cluster kubernetes-the-hard-way \
+            --certificate-authority=ca.pem \
+            --embed-certs=true \
+            --server="https://{{ groups['k8s-node-1'] | join('') }}:6443"
+
+          kubectl config set-credentials admin \
+            --client-certificate=admin.pem \
+            --client-key=admin-key.pem \
+            --embed-certs=true
+
+          kubectl config set-context default \
+            --cluster=kubernetes-the-hard-way \
+            --user=admin
+
+          kubectl config use-context kubernetes-the-hard-way
+        }
+
+    - name: Display some debug msgs
+      run_once: true
+      delegate_to: localhost
+      debug:
+        msg: "{{ hostvars[groups['k8s-node-1'] | join('')]['ip']}}, {{ groups['all'] | map('extract',hostvars,'ansible_nodename') | join(',') }},{{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }},127.0.0.1,kubernetes.default"

@@ -1,0 +1,142 @@
+- hosts: all
+  vars_files:
+    - "all.yml"
+  tasks:
+    - name: Ping all nodes
+      ping:
+
+    - name: Create CSR for all hosts
+      run_once: true
+      delegate_to: localhost
+      loop: "{{ groups['all'] }}"
+      template:
+        src: nodes-csr.json
+        dest: "{{ hostvars[item]['ansible_nodename'] }}-csr.json"
+
+    - name: Generating the certs from the CSRs
+      run_once: true
+      delegate_to: localhost
+      loop: "{{ groups['all'] }}"
+      shell: |
+        cfssl gencert \
+        -ca=ca.pem \
+        -ca-key=ca-key.pem \
+        -config=ca-config.json \
+        -hostname={{ hostvars[item]['ansible_nodename'] }},{{ hostvars[item]['ansible_default_ipv4']['address'] }},{{ hostvars[item]['ip'] }} \
+        -profile=kubernetes \
+        {{ hostvars[item]['ansible_nodename'] }}-csr.json | cfssljson -bare {{ hostvars[item]['ansible_nodename'] }}
+
+
+    - name: Generate the kube-controller-manager certs
+      run_once: true
+      delegate_to: localhost
+      shell: |
+        cfssl gencert \
+          -ca=ca.pem \
+          -ca-key=ca-key.pem \
+          -config=ca-config.json \
+          -profile=kubernetes \
+          kube-controller-manager-csr.json | cfssljson -bare kube-controller-manager
+
+
+    - name: Generate the kube-proxy certs
+      run_once: true
+      delegate_to: localhost
+      shell: |
+        cfssl gencert \
+        -ca=ca.pem \
+        -ca-key=ca-key.pem \
+        -config=ca-config.json \
+        -profile=kubernetes \
+        kube-proxy-csr.json | cfssljson -bare kube-proxy
+
+    - name: Generate the kube-scheduler certs
+      run_once: true
+      delegate_to: localhost
+      shell: |
+        cfssl gencert \
+        -ca=ca.pem \
+        -ca-key=ca-key.pem \
+        -config=ca-config.json \
+        -profile=kubernetes \
+        kube-scheduler-csr.json | cfssljson -bare kube-scheduler
+
+    - name: Generate the kube-api-server certs
+      run_once: true
+      delegate_to: localhost
+      shell: |
+        cfssl gencert \
+        -ca=ca.pem \
+        -ca-key=ca-key.pem \
+        -config=ca-config.json \
+        -hostname=192.168.128.1,{{ groups['all'] | map('extract',hostvars,'ip') | join(',') }},{{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }},127.0.0.1,kubernetes.default \
+        -profile=kubernetes \
+        kubernetes-csr.json | cfssljson -bare kubernetes
+
+    - name: Generate the service-account certs
+      run_once: true
+      delegate_to: localhost
+      shell: |
+        cfssl gencert \
+        -ca=ca.pem \
+        -ca-key=ca-key.pem \
+        -config=ca-config.json \
+        -profile=kubernetes \
+        service-account-csr.json | cfssljson -bare service-account
+
+    - name: Copy CA, kubernetes (api server), service account public and private keys to master
+      when: inventory_hostname in groups['k8s-node-1']
+      copy:
+        src: "{{ item }}"
+        dest: ~/
+      with_items:
+        - ca.pem
+        - ca-key.pem
+        - kubernetes-key.pem
+        - kubernetes.pem
+        - service-account-key.pem
+        - service-account.pem
+        - admin.pem
+        - admin-key.pem
+        - kube-scheduler.pem
+        - kube-scheduler-key.pem
+        - kube-controller-manager.pem
+        - kube-controller-manager-key.pem
+
+    - name: Copy worker certs to worker nodes
+      when: "'k8s-node-1' not in group_names"
+      copy:
+        src: "{{ item }}"
+        dest: /root
+      with_items:
+        - ca.pem
+        - "{{ ansible_nodename }}-key.pem"
+        - "{{ ansible_nodename }}.pem"
+        - kube-proxy.pem
+        - kube-proxy-key.pem
+
+    - name: Generating encryption key
+      run_once: true
+      delegate_to: localhost
+      shell: head -c 32 /dev/urandom | base64
+      register: secret
+
+    - set_fact:
+        secret="{{ secret.stdout }}"
+      run_once: true
+      delegate_to: localhost
+
+    - name: Generate encryption-config
+      run_once: true
+      delegate_to: localhost
+      template:
+        src: encryption-config.yaml.j2
+        dest: encryption-config.yaml
+
+    - name: Copy encryption-config to master node
+      when: inventory_hostname in groups['k8s-node-1']
+      copy:
+        src: "{{ item }}"
+        dest: /root
+      with_items:
+        - encryption-config.yaml

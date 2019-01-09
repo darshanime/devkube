@@ -1,0 +1,8 @@
+- hosts: all
+  vars_files:
+    - "all.yml"
+  tasks:
+    - import_tasks: root_certs.yml
+    - import_tasks: certs.yml
+    - import_tasks: control_plane.yml
+    - import_tasks: workers.yml

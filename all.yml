@@ -1,0 +1,59 @@
+cluster_cidr: 172.16.0.0/12
+cluster_dns: 192.168.128.128
+service_cluster_ip_range: 192.168.128.0/17
+
+
+control_plane_binaries:
+  kube-apiserver:
+    link: https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-apiserver
+    download: true
+
+  kube-controller-manager:
+    link: https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-controller-manager
+    download: true
+
+  kube-scheduler:
+    link: https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-scheduler
+    download: true
+
+  kubectl:
+    link: https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl
+    download: true
+
+  etcd:
+    link: https://github.com/coreos/etcd/releases/download/v3.3.9/etcd-v3.3.9-linux-amd64.tar.gz
+    download: true
+
+
+worker_binaries:
+  kubectl:
+    link: https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl
+    download: true
+
+  kube-proxy:
+    link: https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-proxy
+    download: true
+
+  cni-plugins:
+    link: https://github.com/containernetworking/plugins/releases/download/v0.7.4/cni-plugins-amd64-v0.7.4.tgz
+    download: true
+
+  containerd:
+    link: https://github.com/containerd/containerd/releases/download/v1.2.0-rc.0/containerd-1.2.0-rc.0.linux-amd64.tar.gz
+    download: true
+
+  runc:
+    link: https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64
+    download: true
+
+  crictl:
+    link: https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.12.0/crictl-v1.12.0-linux-amd64.tar.gz
+    download: true
+
+  kubelet:
+    link: https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubelet
+    download: true
+
+  # kubectl:
+  #   link: link_to_kubectl
+  #   download: true

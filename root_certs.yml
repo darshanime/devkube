@@ -1,0 +1,24 @@
+- hosts: all
+  vars_files:
+    - "all.yml"
+  tasks:
+    - name: Ping all nodes
+      ping:
+
+    - name: Generate the CA certs
+      run_once: true
+      delegate_to: localhost
+      shell: |
+          cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+
+    - name: Generate the admin certs
+      run_once: true
+      delegate_to: localhost
+      shell: |
+        cfssl gencert \
+          -ca=ca.pem \
+          -ca-key=ca-key.pem \
+          -config=ca-config.json \
+          -profile=kubernetes \
+          admin-csr.json | cfssljson -bare admin
+
