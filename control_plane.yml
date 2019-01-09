@@ -266,7 +266,6 @@
       shell: |
         kubectl apply --kubeconfig admin.kubeconfig -f kube-rbac-apiserver.yml
 
-
     - name: Generating the kubeconfig for remote access
       run_once: true
       delegate_to: localhost

@@ -1,8 +1,14 @@
 - hosts: all
   vars_files:
     - "all.yml"
-  tasks:
-    - import_tasks: root_certs.yml
-    - import_tasks: certs.yml
-    - import_tasks: control_plane.yml
-    - import_tasks: workers.yml
+- name: Run root_certs playbook
+  import_playbook: root_certs.yml
+
+- name: Run certs playbook
+  import_playbook: certs.yml
+
+- name: Run control_plane playbook
+  import_playbook: control_plane.yml
+
+- name: Run workers playbook
+  import_playbook: workers.yml
