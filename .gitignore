@@ -1,0 +1,5 @@
+*.pem
+*.csr
+*.retry
+/encryption-config.yaml
+/k8s-node-*-csr.json
