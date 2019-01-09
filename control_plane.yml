@@ -265,6 +265,10 @@
       when: inventory_hostname in groups['k8s-node-1']
       shell: |
         kubectl apply --kubeconfig admin.kubeconfig -f kube-rbac-apiserver.yml
+      retries: 5
+      delay: 5
+      register: rbac
+      until: rbac.rc == 0
 
     - name: Generating the kubeconfig for remote access
       run_once: true
