@@ -53,7 +53,3 @@ worker_binaries:
   kubelet:
     link: https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubelet
     download: true
-
-  # kubectl:
-  #   link: link_to_kubectl
-  #   download: true
