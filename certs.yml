@@ -69,7 +69,7 @@
         -ca=ca.pem \
         -ca-key=ca-key.pem \
         -config=ca-config.json \
-        -hostname=192.168.128.1,{{ groups['all'] | map('extract',hostvars,'ip') | join(',') }},{{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }},127.0.0.1,kubernetes.default \
+        -hostname=192.168.128.1,{{ groups['all'] | join(',') }},{{ groups['all'] | map('extract',hostvars,'ip') | join(',') }},{{ groups['all'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }},127.0.0.1,kubernetes.default \
         -profile=kubernetes \
         kubernetes-csr.json | cfssljson -bare kubernetes
 
