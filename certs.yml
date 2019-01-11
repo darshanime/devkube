@@ -107,7 +107,7 @@
       when: "'k8s-node-1' not in group_names"
       copy:
         src: "{{ item }}"
-        dest: /root
+        dest: ~/
       with_items:
         - ca.pem
         - "{{ ansible_nodename }}-key.pem"
@@ -137,6 +137,6 @@
       when: inventory_hostname in groups['k8s-node-1']
       copy:
         src: "{{ item }}"
-        dest: /root
+        dest: ~/
       with_items:
         - encryption-config.yaml
