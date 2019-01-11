@@ -7,6 +7,7 @@
 
     - name: Download the k8s control plane binaries
       when: inventory_hostname in groups['k8s-node-1']
+      become: true
       get_url:
         url: "{{ item['value']['link'] }}"
         dest: "/usr/local/bin/{{ item['key'] }}"
@@ -17,6 +18,7 @@
 
     - name: Generating the kubeconfig for the kube-controller-manager
       when: inventory_hostname in groups['k8s-node-1']
+      become: true
       register: kube_controller_manager
       shell: |
         {
@@ -46,6 +48,7 @@
 
     - name: Generating the kubeconfig for the kube-scheduler
       when: inventory_hostname in groups['k8s-node-1']
+      become: true
       register: kube_scheduler
       shell: |
         {
@@ -75,6 +78,7 @@
 
     - name: Generating the kubeconfig for the admin user
       when: inventory_hostname in groups['k8s-node-1']
+      become: true
       register: admin_kubeconfig
       shell: |
         {
@@ -103,7 +107,8 @@
         var: admin_kubeconfig.stdout_lines
 
 
-    - name: Create required directory - /etc/etcd/
+    - name: Create required directories
+      become: true
       when: inventory_hostname in groups['k8s-node-1']
       file:
         path: "{{ item }}"
@@ -116,6 +121,7 @@
         - ~/etcd
 
     - name: Unarchive etcd and move to correct dir
+      become: true
       when: inventory_hostname in groups['k8s-node-1']
       unarchive:
         src: /usr/local/bin/etc-d
@@ -125,9 +131,11 @@
         extra_opts: ['--strip-components=1']
 
     - when: inventory_hostname in groups['k8s-node-1']
+      become: true
       shell: mv ~/etcd/etcd* /usr/local/bin/
 
     - name: Move certs to correct place
+      become: true
       when: inventory_hostname in groups['k8s-node-1']
       copy:
         src: "{{ item }}"
@@ -138,12 +146,14 @@
         - kubernetes.pem
 
     - name: Create the systemd unit file for etcd
+      become: true
       when: inventory_hostname in groups['k8s-node-1']
       template:
         src: etcd.service.j2
         dest: /etc/systemd/system/etcd.service
 
     - name: Reload conf, start etcd node
+      become: true
       when: inventory_hostname in groups['k8s-node-1']
       systemd:
         daemon_reload: yes
@@ -152,6 +162,7 @@
         enabled: yes
 
     - when: inventory_hostname in groups['k8s-node-1']
+      become: true
       systemd:
         daemon_reload: yes
         name: etcd
@@ -159,10 +170,10 @@
         enabled: yes
 
     - name: Check if etcd is online
+      become: true
       when: inventory_hostname in groups['k8s-node-1']
       register: etcd_output
       ignore_errors: yes
-      become: true
       shell: |
         ETCDCTL_API=3 etcdctl member list \
         --endpoints=https://127.0.0.1:2379 \
@@ -175,6 +186,7 @@
         var: etcd_output.stdout_lines
 
     - name: move the cert files to /var/lib/kubernetes
+      become: true
       when: inventory_hostname in groups['k8s-node-1']
       copy:
         src: "{{ item }}"
@@ -189,6 +201,7 @@
         - encryption-config.yaml
 
     - name: move the cert files to /etc/kubernetes/config/
+      become: true
       when: inventory_hostname in groups['k8s-node-1']
       copy:
         src: "{{ item }}"
@@ -204,20 +217,21 @@
         dest: /etc/systemd/system/kube-apiserver.service
 
     - name: Writing the kube-controller-manager.serivce systemd file
-      when: inventory_hostname in groups['k8s-node-1']
       become: true
+      when: inventory_hostname in groups['k8s-node-1']
       template:
         src: kube-controller-manager.service.j2
         dest: /etc/systemd/system/kube-controller-manager.service
 
     - name: Writing the kube-scheduler.serivce systemd file
-      when: inventory_hostname in groups['k8s-node-1']
       become: true
+      when: inventory_hostname in groups['k8s-node-1']
       template:
         src: kube-scheduler.service.j2
         dest: /etc/systemd/system/kube-scheduler.service
 
     - name: Reload conf, start control plane
+      become: true
       when: inventory_hostname in groups['k8s-node-1']
       systemd:
         daemon_reload: yes
@@ -230,6 +244,7 @@
         - kube-scheduler
 
     - when: inventory_hostname in groups['k8s-node-1']
+      become: true
       systemd:
         daemon_reload: yes
         name: "{{ item }}"
@@ -245,9 +260,9 @@
         seconds: 10
 
     - name: Check if control plane is up
+      become: true
       when: inventory_hostname in groups['k8s-node-1']
       register: k8s_cp_output
-      become: true
       shell: |
         kubectl get componentstatuses --kubeconfig admin.kubeconfig
 
@@ -262,6 +277,7 @@
         dest: ~/
     
     - name: Apply apiserver rbac
+      become: true
       when: inventory_hostname in groups['k8s-node-1']
       shell: |
         kubectl apply --kubeconfig admin.kubeconfig -f kube-rbac-apiserver.yml

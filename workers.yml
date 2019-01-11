@@ -6,6 +6,7 @@
       ping:
 
     - name: Install required packages
+      become: true
       when: "'k8s-node-1' not in group_names"
       apt:
         name: "{{ item }}"
@@ -17,6 +18,7 @@
           - ipset
 
     - name: Download the k8s worker node binaries
+      become: true
       when: "'k8s-node-1' not in group_names"
       get_url:
         url: "{{ item['value']['link'] }}"
@@ -27,6 +29,7 @@
         - "{{ worker_binaries | dict2items | selectattr('value.download') | list }}"
 
     - name: Generating the kubeconfig for the workers
+      become: true
       when: "'k8s-node-1' not in group_names"
       register: worker_kubeconfig
       shell: |
@@ -56,6 +59,7 @@
         var: worker_kubeconfig.stdout_lines
 
     - name: Generating the kubeconfig for the kube-proxy
+      become: true
       when: "'k8s-node-1' not in group_names"
       register: kube_proxy
       shell: |
@@ -85,6 +89,7 @@
         var: kube_proxy.stdout_lines
 
     - name: Create the required dirs
+      become: true
       when: "'k8s-node-1' not in group_names"
       file:
         path: "{{ item }}"
@@ -119,6 +124,7 @@
     #     - runc
 
     - name: Unarchive cri-ctl and move to correct dir
+      become: true
       when: "'k8s-node-1' not in group_names"
       unarchive:
         src: /usr/local/bin/cri-ctl
@@ -126,6 +132,7 @@
         remote_src: yes
 
     - name: Unarchive containerd and move to correct dir
+      become: true
       when: "'k8s-node-1' not in group_names"
       unarchive:
         src: /usr/local/bin/containerd
@@ -133,18 +140,21 @@
         remote_src: yes
 
     - name: Write config file for containerd
+      become: true
       when: "'k8s-node-1' not in group_names"
       template:
         src: containerd_config.toml
         dest: /etc/containerd/config.toml
 
     - name: Write systemd service for containerd
+      become: true
       when: "'k8s-node-1' not in group_names"
       template:
         src: containerd.service
         dest: /etc/systemd/system/containerd.service
 
     - name: Copy kubelet certs to correct dirs
+      become: true
       when: "'k8s-node-1' not in group_names"
       copy:
         src: "{{ item }}"
@@ -155,36 +165,42 @@
         - "{{ ansible_nodename }}.pem"
 
     - when: "'k8s-node-1' not in group_names"
+      become: true
       copy:
         src: ca.pem
         dest: /var/lib/kubernetes/
         remote_src: yes
 
     - name: Write out kubelet-config.yaml
+      become: true
       when: "'k8s-node-1' not in group_names"
       template:
         src: kubelet_config.yaml.j2
         dest: /var/lib/kubelet/kubelet-config.yaml
 
     - name: Write out kubelet.service
+      become: true
       when: "'k8s-node-1' not in group_names"
       template:
         src: kubelet.service
         dest: /etc/systemd/system/kubelet.service
 
     - name: Write out kube-proxy-config.yaml
+      become: true
       when: "'k8s-node-1' not in group_names"
       template:
         src: kube-proxy-config.yaml
         dest: /var/lib/kube-proxy/kube-proxy-config.yaml
 
     - name: Write out kube-proxy.service
+      become: true
       when: "'k8s-node-1' not in group_names"
       template:
         src: kube-proxy.service
         dest: /etc/systemd/system/kube-proxy.service
 
     - name: Reload conf, start worker plane components
+      become: true
       when: "'k8s-node-1' not in group_names"
       systemd:
         daemon_reload: yes
@@ -197,6 +213,7 @@
         - kube-proxy
 
     - when: "'k8s-node-1' not in group_names"
+      become: true
       systemd:
         daemon_reload: yes
         name: "{{ item }}"
@@ -208,6 +225,7 @@
         - kube-proxy
 
     - name: Move cni binaries to correct dir
+      become: true
       when: "'k8s-node-1' not in group_names"
       unarchive:
         src: /usr/local/bin/cni-plugins
@@ -216,6 +234,7 @@
         mode: a+r,u+w,a+x
 
     - name: Add iptable config for flannel
+      become: true
       shell:
         modprobe br_netfilter && sysctl net.bridge.bridge-nf-call-iptables=1
 
