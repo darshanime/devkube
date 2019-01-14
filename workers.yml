@@ -160,6 +160,13 @@
         - "{{ ansible_nodename }}-key.pem"
         - "{{ ansible_nodename }}.pem"
 
+    - name: Copy resolve.conf to server
+      become: true
+      when: "'k8s-node-1' not in group_names"
+      copy:
+        src: resolv.conf
+        dest: /etc/resolv.conf
+
     - when: "'k8s-node-1' not in group_names"
       become: true
       copy:
