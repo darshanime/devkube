@@ -1,6 +1,6 @@
 - hosts: all
   vars_files:
-    - "all.yml"
+    - "variables.yml"
   tasks:
     - name: Ping all nodes
       ping:
