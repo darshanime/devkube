@@ -220,6 +220,13 @@
         - kubelet
         - kube-proxy
 
+    - name: Stop systemd-resolved service
+      when: "'k8s-node-1' not in group_names"
+      become: true
+      systemd:
+        state: stopped
+        name: systemd-resolved
+
     - name: Move cni binaries to correct dir
       become: true
       when: "'k8s-node-1' not in group_names"
