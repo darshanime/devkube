@@ -9,13 +9,9 @@
       become: true
       when: "'k8s-node-1' not in group_names"
       apt:
-        name: "{{ item }}"
+        name: ['socat', 'conntrack', 'ipset']
         state: present
         update_cache: yes
-      with_items:
-          - socat
-          - conntrack
-          - ipset
 
     - name: Download the k8s worker node binaries
       become: true
