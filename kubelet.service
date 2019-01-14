@@ -13,6 +13,7 @@ ExecStart=/usr/local/bin/kubelet \
   --kubeconfig=/var/lib/kubelet/kubeconfig \
   --network-plugin=cni \
   --register-node=true \
+  --resolv-conf=/etc/resolv.conf \
   --cluster-dns={{ cluster_dns }}
   --v=2
 Restart=on-failure
