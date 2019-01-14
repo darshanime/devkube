@@ -1,6 +1,7 @@
-# Devkube
-
-Bootstrap a Kubernetes cluster with custom binaries and flags without [kubeadm](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm/)
+<p align="center"><img src="./logo.jpg"></p>
+<p align="center"><b>Bootstrap a Kubernetes cluster with custom binaries. No Kubeadm!</b></p>
+ 
+## Devkube
 
 Currently, a lot of Kubernetes bootstrappers are black boxes which don't provide a lot of flexibility on how the cluster is set up. Devkube changes that. 
 
@@ -8,8 +9,8 @@ Currently, a lot of Kubernetes bootstrappers are black boxes which don't provide
 ## Features
 
 - Use custom binaries for each component (`kube-scheduler`, `kube-api-server`, `kubelet` etc). 
-  - The `variables.yml` file has links used to download the components.
-  - This is useful if you are developing a new feature on Kubernetes and wish to test the change out on a real cluster
+  - The `variables.yml` file has links for the components.
+  - This is useful if you are developing a new Kubernetes feature and wish to test the change out on a real cluster
 - Change the flags on any component
   - Update the config file for the component and run the relevant playbook to deploy the changes
 - Add new nodes
@@ -21,19 +22,18 @@ Currently, a lot of Kubernetes bootstrappers are black boxes which don't provide
 
 - Provision the VMs on your favorite cloud provider
   - The VMs should be able to communicate with each other via private IPs (on all ports)
-  - the master node should have the `6443` port open for the `api-server`.
+  - The master node should have the `6443` port open for the `api-server`.
   
 - Download the required dependencies on your machine
   - [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) for running the playbooks
   - [cfssl](https://github.com/cloudflare/cfssl) for PKI
   
 - Edit the `hosts.ini` file
-  - Enter the public ip, the ssh-able user and the private ip of the server
-  - Make sure the server is ssh-able with the command `ssh <user>@<public-ip>` and has root access
+  - Enter the public ip, the ssh-able username and the private ip of the server
+  - Make sure the server is ssh-able with the command `ssh <user>@<public-ip>` and the user has root access
   
 - Run the `play.yml` playbook
   - `ansible-playbook play.yml -i hosts.ini`
-  - This playbook is the umbrella playbook for the 4 other playbooks
   
 
 ## How does it work
@@ -43,14 +43,14 @@ Some of the main files are:
   - `variables.yml`
     - This file has the locations for the binaries of the various components, and a download flag for each
   - `root_certs.yml`
-    - This sets up the root CA and generates its public and signing key
+    - This sets up the root CA and generates the public and signing key for it
   - `certs.yml`
     - This sets up all the certificates for the master and worker node components and transfers them to the servers
   - `control_plane.yml`
     - This downloads the control plane binaries and bootstraps the control plane
   - `workers.yml`
     - This downloads the worker node binaries and bootstraps the worker nodes.
-    - It also downloads installs flannel as the CNI network plugin and adds CoreDNS as the DNS addon.
+    - It also downloads installs [flannel](https://github.com/coreos/flannel) as the CNI network plugin and adds [CoreDNS](https://coredns.io/) for DNS.
     
     
 ## How do I...
@@ -68,3 +68,8 @@ Some of the main files are:
 
 ## Demo
 [![devkube-demo](https://asciinema.org/a/221344.svg)](https://asciinema.org/a/221344?autoplay=1&speed=2)
+
+
+## Contributing
+
+Please file and issue if you face any problems. Better still, help fix it and make a PR!
