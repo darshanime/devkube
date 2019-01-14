@@ -192,7 +192,7 @@
       become: true
       when: "'k8s-node-1' not in group_names"
       template:
-        src: kube-proxy-config.yaml
+        src: kube-proxy-config.yaml.j2
         dest: /var/lib/kube-proxy/kube-proxy-config.yaml
 
     - name: Write out kube-proxy.service
