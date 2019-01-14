@@ -1,6 +1,6 @@
 - hosts: all
   vars_files:
-    - "all.yml"
+    - "variables.yml"
 - name: Run root_certs playbook
   import_playbook: root_certs.yml
 

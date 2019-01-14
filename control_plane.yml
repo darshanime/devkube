@@ -1,6 +1,6 @@
 - hosts: all
   vars_files:
-    - "all.yml"
+    - "variables.yml"
   tasks:
     - name: Ping all nodes
       ping:
@@ -22,7 +22,7 @@
       register: kube_controller_manager
       shell: |
         {
-          kubectl config set-cluster kubernetes-the-hard-way \
+          kubectl config set-cluster devkube \
             --certificate-authority=ca.pem \
             --embed-certs=true \
             --server=https://127.0.0.1:6443 \
@@ -35,7 +35,7 @@
             --kubeconfig=/var/lib/kubernetes/kube-controller-manager.kubeconfig
 
           kubectl config set-context default \
-            --cluster=kubernetes-the-hard-way \
+            --cluster=devkube \
             --user=system:kube-controller-manager \
             --kubeconfig=/var/lib/kubernetes/kube-controller-manager.kubeconfig
 
@@ -52,7 +52,7 @@
       register: kube_scheduler
       shell: |
         {
-          kubectl config set-cluster kubernetes-the-hard-way \
+          kubectl config set-cluster devkube \
             --certificate-authority=ca.pem \
             --embed-certs=true \
             --server=https://127.0.0.1:6443 \
@@ -65,7 +65,7 @@
             --kubeconfig=/var/lib/kubernetes/kube-scheduler.kubeconfig
 
           kubectl config set-context default \
-            --cluster=kubernetes-the-hard-way \
+            --cluster=devkube \
             --user=system:kube-scheduler \
             --kubeconfig=/var/lib/kubernetes/kube-scheduler.kubeconfig
 
@@ -82,7 +82,7 @@
       register: admin_kubeconfig
       shell: |
         {
-          kubectl config set-cluster kubernetes-the-hard-way \
+          kubectl config set-cluster devkube \
             --certificate-authority=ca.pem \
             --embed-certs=true \
             --server=https://127.0.0.1:6443 \
@@ -95,7 +95,7 @@
             --kubeconfig=admin.kubeconfig
 
           kubectl config set-context default \
-            --cluster=kubernetes-the-hard-way \
+            --cluster=devkube \
             --user=admin \
             --kubeconfig=admin.kubeconfig
 
@@ -291,7 +291,7 @@
       delegate_to: localhost
       shell: |
         {
-          kubectl config set-cluster kubernetes-the-hard-way \
+          kubectl config set-cluster devkube \
             --certificate-authority=ca.pem \
             --embed-certs=true \
             --server="https://{{ groups['k8s-node-1'] | join('') }}:6443"
@@ -302,10 +302,10 @@
             --embed-certs=true
 
           kubectl config set-context default \
-            --cluster=kubernetes-the-hard-way \
+            --cluster=devkube \
             --user=admin
 
-          kubectl config use-context kubernetes-the-hard-way
+          kubectl config use-context default
         }
 
     - name: Display some debug msgs

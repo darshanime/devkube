@@ -1,6 +1,6 @@
 - hosts: all
   vars_files:
-    - "all.yml"
+    - "variables.yml"
   tasks:
     - name: Ping all nodes
       ping:
@@ -30,7 +30,7 @@
       register: worker_kubeconfig
       shell: |
         {
-          kubectl config set-cluster kubernetes-the-hard-way \
+          kubectl config set-cluster devkube \
           --certificate-authority=ca.pem \
           --embed-certs=true \
           --server="https://{{ groups['k8s-node-1'] | join('') }}:6443" \
@@ -43,7 +43,7 @@
           --kubeconfig=/var/lib/kubelet/kubeconfig
 
           kubectl config set-context default \
-          --cluster=kubernetes-the-hard-way \
+          --cluster=devkube \
           --user=system:node:"{{ ansible_nodename }}" \
           --kubeconfig=/var/lib/kubelet/kubeconfig
 
@@ -60,7 +60,7 @@
       register: kube_proxy
       shell: |
         {
-          kubectl config set-cluster kubernetes-the-hard-way \
+          kubectl config set-cluster devkube \
             --certificate-authority=ca.pem \
             --embed-certs=true \
             --server="https://{{ groups['k8s-node-1'] | join('') }}:6443" \
@@ -73,7 +73,7 @@
             --kubeconfig=/var/lib/kube-proxy/kubeconfig
 
           kubectl config set-context default \
-            --cluster=kubernetes-the-hard-way \
+            --cluster=devkube \
             --user=system:kube-proxy \
             --kubeconfig=/var/lib/kube-proxy/kubeconfig
 
