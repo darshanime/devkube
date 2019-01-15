@@ -3,25 +3,25 @@
  
 ## Devkube
 
-Currently, a lot of Kubernetes bootstrappers are black boxes which don't provide a lot of flexibility on how the cluster is set up. Devkube changes that. 
+Currently, a lot of Kubernetes bootstrappers are black boxes which don't provide a lot of flexibility on how the cluster is set up. Devkube changes that. Based off of Kelsey's [KTHW](https://github.com/kelseyhightower/kubernetes-the-hard-way/), it wires together a cluster with custom binaries, complete with Flannel and CoreDNS.
 
 
 ## Features
 
-- Use custom binaries for each component (`kube-scheduler`, `kube-api-server`, `kubelet` etc). 
+- **Use custom binaries for each component (`kube-scheduler`, `kube-api-server`, `kubelet` etc).** 
   - The `variables.yml` file has links for the components.
   - This is useful if you are developing a new Kubernetes feature and wish to test the change out on a real cluster
-- Change the flags on any component
+- **Change the flags on any component**
   - Update the config file for the component and run the relevant playbook to deploy the changes
-- Add new nodes
+- **Add new nodes**
   - Create the VM, run the relevant playbooks and the node should automatically join the cluster
-- Use cluster for testing manifests etc
+- **Use cluster for testing manifests etc**
   - Since the cluster can be created in a few minutes on bare VMs, devkube can be used to quickly get clusters up and down for testing purposes
   
 ## Getting started
 
 - Provision the VMs on your favorite cloud provider
-  - The VMs should be able to communicate with each other via private IPs (on all ports)
+  - The VMs should be running Ubuntu 18.04 and be able to communicate with each other via private IPs (on all ports)
   - The master node should have the `6443` port open for the `api-server`.
   
 - Download the required dependencies on your machine
@@ -31,6 +31,7 @@ Currently, a lot of Kubernetes bootstrappers are black boxes which don't provide
 - Edit the `hosts.ini` file
   - Enter the public ip, the ssh-able username and the private ip of the server
   - Make sure the server is ssh-able with the command `ssh <user>@<public-ip>` and the user has root access
+  - The first server (`k8s-node-1`) will become the master and all the other nodes will join in as workers
   
 - Run the `play.yml` playbook
   - `ansible-playbook play.yml -i hosts.ini`
@@ -72,4 +73,4 @@ Some of the main files are:
 
 ## Contributing
 
-Please file and issue if you face any problems. Better still, help fix it and make a PR!
+Please file an issue if you face any problems. Better still, help fix it and make a PR!
