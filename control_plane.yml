@@ -248,7 +248,7 @@
       systemd:
         daemon_reload: yes
         name: "{{ item }}"
-        state: started
+        state: restarted
         enabled: yes
       with_items:
         - kube-apiserver
