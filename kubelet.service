@@ -7,6 +7,7 @@ Requires=containerd.service
 [Service]
 ExecStart=/usr/local/bin/kubelet \
   --config=/var/lib/kubelet/kubelet-config.yaml \
+  --allow-privileged=true \
   --container-runtime=remote \
   --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock \
   --image-pull-progress-deadline=2m \
@@ -14,8 +15,9 @@ ExecStart=/usr/local/bin/kubelet \
   --network-plugin=cni \
   --register-node=true \
   --resolv-conf=/etc/resolv.conf \
-  --cluster-dns={{ cluster_dns }}
-  --v=2
+  --cluster-dns={{ cluster_dns }} \
+  --v=2 \
+  --feature-gates=VolumeSnapshotDataSource=true,KubeletPluginsWatcher=true,CSINodeInfo=true,CSIDriverRegistry=true,BlockVolume=true,CSIBlockVolume=true
 Restart=on-failure
 RestartSec=5
 

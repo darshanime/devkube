@@ -16,6 +16,7 @@ ExecStart=/usr/local/bin/kube-controller-manager \
   --service-account-private-key-file=/var/lib/kubernetes/service-account-key.pem \
   --service-cluster-ip-range={{ service_cluster_ip_range }} \
   --use-service-account-credentials=true \
+  --feature-gates=BlockVolume=true,CSIBlockVolume=true \
   --v=2
 Restart=on-failure
 RestartSec=5
