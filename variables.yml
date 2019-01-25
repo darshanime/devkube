@@ -5,19 +5,19 @@ service_cluster_ip_range: 192.168.128.0/17
 
 control_plane_binaries:
   kube-apiserver:
-    link: https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-apiserver
+    link: https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kube-apiserver
     download: true
 
   kube-controller-manager:
-    link: https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-controller-manager
+    link: https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kube-controller-manager
     download: true
 
   kube-scheduler:
-    link: https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-scheduler
+    link: https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kube-scheduler
     download: true
 
   kubectl:
-    link: https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl
+    link: https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kubectl
     download: true
 
   etc-d:
@@ -27,11 +27,11 @@ control_plane_binaries:
 
 worker_binaries:
   kubectl:
-    link: https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubectl
+    link: https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kubectl
     download: true
 
   kube-proxy:
-    link: https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-proxy
+    link: https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kube-proxy
     download: true
 
   cni-plugins:
@@ -51,5 +51,5 @@ worker_binaries:
     download: true
 
   kubelet:
-    link: https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kubelet
+    link: https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kubelet
     download: true
