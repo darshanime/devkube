@@ -174,14 +174,16 @@
     - name: Check if etcd is online
       become: true
       when: inventory_hostname in groups['k8s-node-1']
-      register: etcd_output
-      ignore_errors: yes
       shell: |
         ETCDCTL_API=3 etcdctl member list \
         --endpoints=https://127.0.0.1:2379 \
         --cacert=/etc/etcd/ca.pem \
         --cert=/etc/etcd/kubernetes.pem \
         --key=/etc/etcd/kubernetes-key.pem
+      register: etcd_output
+      retries: 5
+      delay: 5
+      until: etcd_output.rc == 0
 
     - when: inventory_hostname in groups['k8s-node-1']
       debug:
