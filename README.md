@@ -66,6 +66,11 @@ Some of the main files are:
 - Change the kubelet binary
   - update the `variables.yml` file with the new binary endpoint
   - run `workers.yml` playbook
+  
+- Avoid downloading worker node binaries
+  - this might be required if for example you change a flag on kubelet and don't need a fresh download of binaries
+  - run `ansible-playbook workers.yml -i hosts.ini --skip-tags "downloads"`
+  
 
 ## Demo
 [![devkube-demo](https://asciinema.org/a/221344.svg)](https://asciinema.org/a/221344?autoplay=1&speed=2)

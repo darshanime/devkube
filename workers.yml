@@ -23,6 +23,8 @@
         force: true
       with_items:
         - "{{ worker_binaries | dict2items | selectattr('value.download') | list }}"
+      tags:
+        - downloads
 
     - name: Generating the kubeconfig for the workers
       become: true
