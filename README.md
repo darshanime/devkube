@@ -6,6 +6,9 @@
 Currently, a lot of Kubernetes bootstrappers are black boxes which don't provide a lot of flexibility on how the cluster is set up. Devkube changes that. Based off of Kelsey's [KTHW](https://github.com/kelseyhightower/kubernetes-the-hard-way/), it wires together a cluster with custom binaries, complete with Flannel and CoreDNS.
 
 
+[![devkube-demo](https://asciinema.org/a/221344.svg)](https://asciinema.org/a/221344?autoplay=1&speed=2)
+
+
 ## Features
 
 - **Use custom binaries for each component (`kube-scheduler`, `kube-api-server`, `kubelet` etc).** 
@@ -71,10 +74,6 @@ Some of the main files are:
   - this might be required if for example you change a flag on kubelet and don't need a fresh download of binaries
   - run `ansible-playbook workers.yml -i hosts.ini --skip-tags "downloads"`
   
-
-## Demo
-[![devkube-demo](https://asciinema.org/a/221344.svg)](https://asciinema.org/a/221344?autoplay=1&speed=2)
-
 
 ## Contributing
 

@@ -43,8 +43,8 @@ metadata:
   name: flannel
   namespace: kube-system
 ---
-kind: ConfigMap
 apiVersion: v1
+kind: ConfigMap
 metadata:
   name: kube-flannel-cfg
   namespace: kube-system
@@ -79,7 +79,7 @@ data:
       }
     }
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: kube-flannel-ds-amd64
@@ -88,6 +88,9 @@ metadata:
     tier: node
     app: flannel
 spec:
+  selector:
+    matchLabels:
+      app: flannel
   template:
     metadata:
       labels:
@@ -131,7 +134,9 @@ spec:
             cpu: "100m"
             memory: "50Mi"
         securityContext:
-          privileged: true
+          privileged: false
+          capabilities:
+             add: ["NET_ADMIN"]
         env:
         - name: POD_NAME
           valueFrom:
@@ -157,7 +162,7 @@ spec:
           configMap:
             name: kube-flannel-cfg
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: kube-flannel-ds-arm64
@@ -166,6 +171,9 @@ metadata:
     tier: node
     app: flannel
 spec:
+  selector:
+    matchLabels:
+      app: flannel
   template:
     metadata:
       labels:
@@ -209,7 +217,9 @@ spec:
             cpu: "100m"
             memory: "50Mi"
         securityContext:
-          privileged: true
+          privileged: false
+          capabilities:
+             add: ["NET_ADMIN"]
         env:
         - name: POD_NAME
           valueFrom:
@@ -235,7 +245,7 @@ spec:
           configMap:
             name: kube-flannel-cfg
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: kube-flannel-ds-arm
@@ -244,6 +254,9 @@ metadata:
     tier: node
     app: flannel
 spec:
+  selector:
+    matchLabels:
+      app: flannel
   template:
     metadata:
       labels:
@@ -287,7 +300,9 @@ spec:
             cpu: "100m"
             memory: "50Mi"
         securityContext:
-          privileged: true
+          privileged: false
+          capabilities:
+             add: ["NET_ADMIN"]
         env:
         - name: POD_NAME
           valueFrom:
@@ -313,7 +328,7 @@ spec:
           configMap:
             name: kube-flannel-cfg
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: kube-flannel-ds-ppc64le
@@ -322,6 +337,9 @@ metadata:
     tier: node
     app: flannel
 spec:
+  selector:
+    matchLabels:
+      app: flannel
   template:
     metadata:
       labels:
@@ -365,7 +383,9 @@ spec:
             cpu: "100m"
             memory: "50Mi"
         securityContext:
-          privileged: true
+          privileged: false
+          capabilities:
+             add: ["NET_ADMIN"]
         env:
         - name: POD_NAME
           valueFrom:
@@ -391,7 +411,7 @@ spec:
           configMap:
             name: kube-flannel-cfg
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: kube-flannel-ds-s390x
@@ -400,6 +420,9 @@ metadata:
     tier: node
     app: flannel
 spec:
+  selector:
+    matchLabels:
+      app: flannel
   template:
     metadata:
       labels:
@@ -443,7 +466,9 @@ spec:
             cpu: "100m"
             memory: "50Mi"
         securityContext:
-          privileged: true
+          privileged: false
+          capabilities:
+             add: ["NET_ADMIN"]
         env:
         - name: POD_NAME
           valueFrom:
