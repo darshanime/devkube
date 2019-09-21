@@ -13,16 +13,19 @@
         state: present
         update_cache: yes
 
+    - name: Run download vars playbook
+      include: latest_kubernetes_version.yml
+
     - name: Download the k8s worker node binaries
       become: true
       when: "'k8s-node-1' not in group_names"
       get_url:
-        url: "{{ item['value']['link'] }}"
+        url: "{{ item['value'] }}"
         dest: "/usr/local/bin/{{ item['key'] }}"
         mode: a+r,u+w,a+x
         force: true
       with_items:
-        - "{{ worker_binaries | dict2items | selectattr('value.download') | list }}"
+        - "{{ worker_binaries | dict2items | list }}"
       tags:
         - downloads
 

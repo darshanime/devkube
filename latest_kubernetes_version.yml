@@ -1,0 +1,27 @@
+    - name: Get the latest kubernetes artifact version
+      delegate_to: localhost
+      when: release == "latest"
+      shell: |
+        curl "https://www.googleapis.com/storage/v1/b/kubernetes-release-dev/o/ci%2Flatest.txt?alt=media" -s
+      args:
+        warn: false
+      register: latest_release
+
+    - set_fact:
+        latest_release_encoded_path="{{ latest_release.stdout | urlencode }}"
+      when: release == "latest"
+
+    - set_fact:
+        latest_release_path="ci%2F{{ latest_release_encoded_path }}%2Fbin%2Flinux%2Famd64%2F"
+      when: release == "latest"
+
+    - name: Generate download vars file
+      delegate_to: localhost
+      template:
+        src: download_vars.yml.j2
+        dest: download_vars.yml
+
+    - name: Load download vars
+      include_vars:
+        file: download_vars.yml
+

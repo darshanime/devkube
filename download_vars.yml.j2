@@ -1,0 +1,35 @@
+{% if release == 'latest' %}
+control_plane_binaries:
+    kube-apiserver: https://www.googleapis.com/storage/v1/b/kubernetes-release-dev/o/{{ latest_release_path }}kube-apiserver?alt=media
+    kube-controller-manager: https://www.googleapis.com/storage/v1/b/kubernetes-release-dev/o/{{ latest_release_path }}kube-controller-manager?alt=media
+    kube-scheduler: https://www.googleapis.com/storage/v1/b/kubernetes-release-dev/o/{{ latest_release_path }}kube-scheduler?alt=media
+    kubectl: https://www.googleapis.com/storage/v1/b/kubernetes-release-dev/o/{{ latest_release_path }}kubectl?alt=media
+    etc-d: https://github.com/coreos/etcd/releases/download/v3.3.9/etcd-v3.3.9-linux-amd64.tar.gz
+
+worker_binaries:
+    kubectl: https://www.googleapis.com/storage/v1/b/kubernetes-release-dev/o/{{ latest_release_path }}kubectl?alt=media
+    kube-proxy: https://www.googleapis.com/storage/v1/b/kubernetes-release-dev/o/{{ latest_release_path }}kube-proxy?alt=media
+    kubelet: https://www.googleapis.com/storage/v1/b/kubernetes-release-dev/o/{{ latest_release_path }}kubelet?alt=media
+    cni-plugins: https://github.com/containernetworking/plugins/releases/download/v0.7.4/cni-plugins-amd64-v0.7.4.tgz
+    containerd: https://github.com/containerd/containerd/releases/download/v1.2.0-rc.0/containerd-1.2.0-rc.0.linux-amd64.tar.gz
+    runc: https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64
+    cri-ctl: https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.12.0/crictl-v1.12.0-linux-amd64.tar.gz
+{% elif release != 'custom' %}
+control_plane_binaries:
+    kube-apiserver: https://storage.googleapis.com/kubernetes-release/release/{{ release }}/bin/linux/amd64/kube-apiserver
+    kube-controller-manager: https://storage.googleapis.com/kubernetes-release/release/{{ release }}/bin/linux/amd64/kube-controller-manager
+    kube-scheduler: https://storage.googleapis.com/kubernetes-release/release/{{ release }}/bin/linux/amd64/kube-scheduler
+    kubectl: https://storage.googleapis.com/kubernetes-release/release/{{ release }}/bin/linux/amd64/kubectl
+    etc-d: https://github.com/coreos/etcd/releases/download/v3.3.9/etcd-v3.3.9-linux-amd64.tar.gz
+
+worker_binaries:
+    kubectl: https://storage.googleapis.com/kubernetes-release/release/{{ release }}/bin/linux/amd64/kubectl
+    kube-proxy: https://storage.googleapis.com/kubernetes-release/release/{{ release }}/bin/linux/amd64/kube-proxy
+    kubelet: https://storage.googleapis.com/kubernetes-release/release/{{ release }}/bin/linux/amd64/kubelet
+    cni-plugins: https://github.com/containernetworking/plugins/releases/download/v0.7.4/cni-plugins-amd64-v0.7.4.tgz
+    containerd: https://github.com/containerd/containerd/releases/download/v1.2.0-rc.0/containerd-1.2.0-rc.0.linux-amd64.tar.gz
+    runc: https://github.com/opencontainers/runc/releases/download/v1.0.0-rc5/runc.amd64
+    cri-ctl: https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.12.0/crictl-v1.12.0-linux-amd64.tar.gz
+{% endif %}
+
+

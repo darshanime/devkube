@@ -45,7 +45,10 @@ Currently, a lot of Kubernetes bootstrappers are black boxes which don't provide
 Some of the main files are:
 
   - `variables.yml`
-    - This file has the locations for the binaries of the various components, and a download flag for each
+    - This file has various top level configs, including release
+    - `release` has 2 possible values:
+      - `latest` - this will pull in the latest artifact from kubernetes CI
+      - `v1.16.0-beta.1` etc - specific version, can be anything
   - `root_certs.yml`
     - This sets up the root CA and generates the public and signing key for it
   - `certs.yml`

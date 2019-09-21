@@ -5,16 +5,19 @@
     - name: Ping all nodes
       ping:
 
+    - name: Run download vars playbook
+      include: latest_kubernetes_version.yml
+
     - name: Download the k8s control plane binaries
       when: inventory_hostname in groups['k8s-node-1']
       become: true
       get_url:
-        url: "{{ item['value']['link'] }}"
+        url: "{{ item['value'] }}"
         dest: "/usr/local/bin/{{ item['key'] }}"
         mode: a+r,u+w,a+x
         force: true
       with_items:
-        - "{{ control_plane_binaries | dict2items | selectattr('value.download') | list }}"
+        - "{{ control_plane_binaries | dict2items | list }}"
       tags:
         - downloads
 
