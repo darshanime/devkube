@@ -15,7 +15,7 @@ ExecStart=/usr/local/bin/kubelet \
   --register-node=true \
   --resolv-conf=/etc/resolv.conf \
   --cluster-dns={{ cluster_dns }} \
-  --v=2 \
+  --v=10 \
   --feature-gates=VolumeSnapshotDataSource=true,CSINodeInfo=true,CSIDriverRegistry=true,BlockVolume=true,CSIBlockVolume=true
 Restart=on-failure
 RestartSec=5

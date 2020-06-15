@@ -15,7 +15,7 @@ ExecStart=/usr/local/bin/etcd \
   --client-cert-auth \
   --initial-advertise-peer-urls https://{{ hostvars[groups['k8s-node-1'] | join('')]['ip'] }}:2380 \
   --listen-peer-urls https://{{ hostvars[groups['k8s-node-1'] | join('')]['ip'] }}:2380 \
-  --listen-client-urls https://{{ hostvars[groups['k8s-node-1'] | join('')]['ip'] }}:2379,https://127.0.0.1:2379 \
+  --listen-client-urls https://0.0.0.0:2379 \
   --advertise-client-urls https://{{ hostvars[groups['k8s-node-1'] | join('')]['ip'] }}:2379 \
   --initial-cluster-token etcd-cluster-0 \
   --initial-cluster {{ ansible_nodename }}=https://{{ hostvars[groups['k8s-node-1'] | join('')]['ip'] }}:2380 \
